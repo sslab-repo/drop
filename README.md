@@ -76,11 +76,33 @@ Lives at `https://datapot.org/drop/`.
 | `index.php` | Upload page (progress bar, expiration picker, result link) |
 | `upload.php` | Receives the upload, enforces size/password, stores file |
 | `f.php` | Download handler for `/CODE` short links (legacy `/f/CODE` too) |
+| `api.php` | Agent/API endpoint: upload, info, stats (see `apidoc.php`) |
+| `apidoc.php` | API reference page (linked from the main page footer) |
+| `apikey.php` | CLI-only API key manager (blocked from web) |
 | `stats.php` | Live service-size JSON polled by the main page |
 | `cleanup.php` | Cron target — archives expired files, deletes orphan blobs |
 | `config.php` | Password hash, secrets, size limit, expiration table |
 | `lib.php` | Shared helpers (DB, trust cookie, code generator) |
 | `data/` | SQLite DB + uploaded blobs (web access denied) |
+
+## API (for scripts and AI agents)
+
+`api.php` speaks JSON: `?action=upload` (multipart `file` + `expiration`),
+`?action=info&code=…`, `?action=stats`; downloads are just `GET /drop/CODE`.
+Expirations ≤ 30 days need no key; `6m`/`1y`/`forever` require an API key in
+the `X-Api-Key` header. Full reference with curl examples: `apidoc.php`
+(linked from the main page footer).
+
+Keys are managed only from the server CLI (no lifespan management by design):
+
+```
+php apikey.php list                # id, key prefix, owner, created (Chicago)
+php apikey.php add "Owner Name"    # prints the key ONCE; only a hash is stored
+php apikey.php remove <id>
+```
+
+Uploads made with a key record the owner name, which also appears in the
+expiry archive metadata.
 
 ## Testing
 

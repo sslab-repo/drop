@@ -176,7 +176,8 @@ $protected = $cfg['protected'];
 
 <footer>
   <div><strong>SSLab@Lewis University</strong></div>
-  <div class="fmuted"><a href="mailto:sslab@lewisu.edu">sslab@lewisu.edu</a></div>
+  <div class="fmuted"><a href="mailto:sslab@lewisu.edu">sslab@lewisu.edu</a> ·
+    <a href="apidoc.php">API Reference</a></div>
   <div class="credit">
     <!-- Claude mark -->
     <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">

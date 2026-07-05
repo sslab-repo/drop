@@ -26,10 +26,19 @@ function db(): PDO {
             ip TEXT,                     -- uploader source IP (for archive metadata)
             sha256 TEXT                  -- computed at upload (for archive metadata)
         )');
-        // Migration for databases created before ip/sha256 existed.
+        // Migrations for databases created before these columns existed.
         $cols = $db->query('PRAGMA table_info(files)')->fetchAll(PDO::FETCH_COLUMN, 1);
-        if (!in_array('ip', $cols, true))     $db->exec('ALTER TABLE files ADD COLUMN ip TEXT');
-        if (!in_array('sha256', $cols, true)) $db->exec('ALTER TABLE files ADD COLUMN sha256 TEXT');
+        if (!in_array('ip', $cols, true))        $db->exec('ALTER TABLE files ADD COLUMN ip TEXT');
+        if (!in_array('sha256', $cols, true))    $db->exec('ALTER TABLE files ADD COLUMN sha256 TEXT');
+        if (!in_array('api_owner', $cols, true)) $db->exec('ALTER TABLE files ADD COLUMN api_owner TEXT');
+        // API keys — managed only by the server-side CLI (apikey.php).
+        $db->exec('CREATE TABLE IF NOT EXISTS api_keys (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            key_hash TEXT UNIQUE NOT NULL,   -- sha256 of the key; plaintext never stored
+            prefix TEXT NOT NULL,            -- first chars, for identification in listings
+            owner TEXT NOT NULL,
+            created_at INTEGER NOT NULL
+        )');
         $db->exec('CREATE TABLE IF NOT EXISTS pw_failures (
             ip TEXT NOT NULL,
             ts INTEGER NOT NULL
@@ -98,6 +107,16 @@ function grant_trust(): void {
     ]);
 }
 
+// ---- API keys ----
+
+function api_key_owner(PDO $db, string $key): ?string {
+    if ($key === '') return null;
+    $st = $db->prepare('SELECT owner FROM api_keys WHERE key_hash = ?');
+    $st->execute([hash('sha256', $key)]);
+    $owner = $st->fetchColumn();
+    return $owner === false ? null : (string)$owner;
+}
+
 // ---- short codes ----
 
 function gen_code(PDO $db, int $len = 6): string {
@@ -156,6 +175,7 @@ function archive_row(PDO $db, array $row): void {
              . "- Short code: {$row['code']}\n"
              . "- Archived as: $final\n"
              . "- Source IP: " . (!empty($row['ip']) ? $row['ip'] : 'unknown') . "\n"
+             . (!empty($row['api_owner']) ? "- Uploaded via API key: {$row['api_owner']}\n" : '')
              . "- Uploaded (Chicago): $up\n"
              . "- Expired (Chicago): $ex\n"
              . "- Archived (Chicago): " . $now->format($fmt) . "\n"
@@ -176,6 +196,53 @@ function purge_expired(PDO $db): int {
         $n++;
     }
     return $n;
+}
+
+// ---- upload storage core (shared by upload.php and api.php) ----
+
+function upload_error_message(int $err): string {
+    switch ($err) {
+        case UPLOAD_ERR_INI_SIZE:
+        case UPLOAD_ERR_FORM_SIZE: return 'File exceeds the size limit.';
+        case UPLOAD_ERR_PARTIAL:   return 'Upload was interrupted — please retry.';
+        case UPLOAD_ERR_NO_FILE:   return 'No file selected.';
+        default:                   return 'Upload failed (code ' . $err . ').';
+    }
+}
+
+// Stores a validated $_FILES entry; returns [code, error] — one is null.
+function store_file(PDO $db, array $f, string $expKey, ?string $apiOwner = null): array {
+    $cfg = cfg();
+    $code = gen_code($db);
+    $storedName = bin2hex(random_bytes(16));
+    $dest = __DIR__ . '/data/' . $storedName;
+    if (!move_uploaded_file($f['tmp_name'], $dest)) {
+        return [null, 'Could not store the file on the server.'];
+    }
+    $seconds = $cfg['expirations'][$expKey][1];
+    $db->prepare('INSERT INTO files (code, original_name, stored_name, size, mime, uploaded_at, expires_at, ip, sha256, api_owner)
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+       ->execute([
+            $code,
+            $f['name'],
+            $storedName,
+            $f['size'],
+            $f['type'] ?: null,
+            time(),
+            $seconds === null ? null : time() + $seconds,
+            $_SERVER['REMOTE_ADDR'] ?? null,
+            hash_file('sha256', $dest),
+            $apiOwner,
+        ]);
+    stat_add($db, 'total_files', 1);
+    stat_add($db, 'total_bytes', (int)$f['size']);
+    return [$code, null];
+}
+
+function short_url(string $code): string {
+    $dir = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/');
+    $scheme = !empty($_SERVER['HTTPS']) ? 'https' : 'http';
+    return $scheme . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . $dir . '/' . $code;
 }
 
 function json_out(array $data, int $status = 200) { // no return type: PHP 8.0 compat

@@ -159,6 +159,27 @@ else
   echo "  SKIP  expiry + cleanup tests (set DROP_DIR=/path/to/drop and need php CLI)"
 fi
 
+# ---------- API: keyless short upload + info + key gate ----------
+resp=$(curl -s -F "file=@$TMP/small.bin" -F expiration=30d "$BASE/api.php?action=upload")
+if [ "$(jget "$resp" ok)" = true ]; then
+  ok "API upload 30d without key"
+  acode=$(jget "$resp" code)
+  resp=$(curl -s "$BASE/api.php?action=info&code=$acode")
+  [ "$(jget "$resp" ok)" = true ] && ok "API info returns metadata" || bad "API info" "$resp"
+else
+  bad "API upload 30d without key" "$resp"
+fi
+resp=$(curl -s -F "file=@$TMP/small.bin" -F expiration=1y "$BASE/api.php?action=upload")
+if [ "$(jget "$resp" ok)" = false ] && [ "$(jget "$resp" need_key)" = true ]; then
+  ok "API 1y without key refused (need_key)"
+else
+  bad "API 1y without key refused" "$resp"
+fi
+resp=$(curl -s -H "X-Api-Key: definitely-not-a-key" -F "file=@$TMP/small.bin" -F expiration=1y "$BASE/api.php?action=upload")
+[ "$(jget "$resp" ok)" = false ] && ok "API invalid key refused" || bad "API invalid key refused" "$resp"
+resp=$(curl -s "$BASE/api.php?action=stats")
+[ "$(jget "$resp" ok)" = true ] && ok "API stats responds" || bad "API stats responds" "$resp"
+
 # ---------- 13. oversize upload (opt-in: BIG=1) ----------
 if [ "${BIG:-0}" = 1 ]; then
   head -c $((301*1024*1024)) /dev/zero > "$TMP/big.bin"

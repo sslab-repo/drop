@@ -21,13 +21,7 @@ if (empty($_FILES['file'])) {
 
 $f = $_FILES['file'];
 if ($f['error'] !== UPLOAD_ERR_OK) {
-    $msg = match ($f['error']) {
-        UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE => 'File exceeds the size limit.',
-        UPLOAD_ERR_PARTIAL => 'Upload was interrupted — please retry.',
-        UPLOAD_ERR_NO_FILE => 'No file selected.',
-        default => 'Upload failed (code ' . $f['error'] . ').',
-    };
-    json_out(['ok' => false, 'error' => $msg], 400);
+    json_out(['ok' => false, 'error' => upload_error_message($f['error'])], 400);
 }
 if ($f['size'] > $cfg['max_bytes']) {
     json_out(['ok' => false, 'error' => 'File is larger than 300 MB.'], 413);
@@ -52,36 +46,9 @@ if (in_array($expKey, $cfg['protected'], true) && !is_trusted()) {
     grant_trust(); // correct password → trust this computer for 30 days
 }
 
-$db = db();
-$code = gen_code($db);
-$storedName = bin2hex(random_bytes(16));
-$dest = __DIR__ . '/data/' . $storedName;
-
-if (!move_uploaded_file($f['tmp_name'], $dest)) {
-    json_out(['ok' => false, 'error' => 'Could not store the file on the server.'], 500);
+[$code, $err] = store_file(db(), $f, $expKey);
+if ($err !== null) {
+    json_out(['ok' => false, 'error' => $err], 500);
 }
 
-$seconds = $cfg['expirations'][$expKey][1];
-$db->prepare('INSERT INTO files (code, original_name, stored_name, size, mime, uploaded_at, expires_at, ip, sha256)
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
-   ->execute([
-        $code,
-        $f['name'],
-        $storedName,
-        $f['size'],
-        $f['type'] ?: null,
-        time(),
-        $seconds === null ? null : time() + $seconds,
-        $_SERVER['REMOTE_ADDR'] ?? null,
-        hash_file('sha256', $dest),   // recorded now for the expiry archive metadata
-    ]);
-
-stat_add($db, 'total_files', 1);
-stat_add($db, 'total_bytes', (int)$f['size']);
-
-// Build the short link from the current location: /drop/upload.php → /drop/CODE
-$dir = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/');
-$scheme = !empty($_SERVER['HTTPS']) ? 'https' : 'http';
-$url = $scheme . '://' . $_SERVER['HTTP_HOST'] . $dir . '/' . $code;
-
-json_out(['ok' => true, 'code' => $code, 'url' => $url]);
+json_out(['ok' => true, 'code' => $code, 'url' => short_url($code)]);
