@@ -1,8 +1,11 @@
 # drop — Apache config for shared hosting
 
-# Short links: /drop/f/Ab3xK9 → f.php?c=Ab3xK9
+# Short links: /drop/Ab3xK9 → f.php?c=Ab3xK9  (legacy /drop/f/Ab3xK9 still works)
 RewriteEngine On
 RewriteRule ^f/([A-Za-z0-9]+)$ f.php?c=$1 [L,QSA]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^([A-Za-z0-9]{4,16})$ f.php?c=$1 [L,QSA]
 
 # Never serve these directly
 <FilesMatch "^(config\.php|lib\.php|\.user\.ini)$">

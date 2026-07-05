@@ -12,7 +12,7 @@ Lives at `https://datapot.org/drop/`.
 - Expirations: **1 day / 30 days / 6 months / 1 year / forever**
 - Long expirations (6 m / 1 y / forever) require the **upload password**;
   a correct password trusts that computer for **30 days** (signed cookie)
-- Short download links: `https://datapot.org/drop/f/Ab3xK9`
+- Short download links: `https://datapot.org/drop/Ab3xK9`
 - Downloads are always forced as attachments (nothing renders in the browser)
 - Expired files removed by daily cron + checked lazily on every download
 
@@ -69,7 +69,7 @@ Lives at `https://datapot.org/drop/`.
 |---|---|
 | `index.php` | Upload page (progress bar, expiration picker, result link) |
 | `upload.php` | Receives the upload, enforces size/password, stores file |
-| `f.php` | Download handler for `/f/CODE` short links |
+| `f.php` | Download handler for `/CODE` short links (legacy `/f/CODE` too) |
 | `cleanup.php` | Cron target — deletes expired files and orphan blobs |
 | `config.php` | Password hash, secrets, size limit, expiration table |
 | `lib.php` | Shared helpers (DB, trust cookie, code generator) |

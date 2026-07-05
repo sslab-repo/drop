@@ -68,9 +68,9 @@ $db->prepare('INSERT INTO files (code, original_name, stored_name, size, mime, u
         $seconds === null ? null : time() + $seconds,
     ]);
 
-// Build the short link from the current location: /drop/upload.php → /drop/f/CODE
+// Build the short link from the current location: /drop/upload.php → /drop/CODE
 $dir = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/');
 $scheme = !empty($_SERVER['HTTPS']) ? 'https' : 'http';
-$url = $scheme . '://' . $_SERVER['HTTP_HOST'] . $dir . '/f/' . $code;
+$url = $scheme . '://' . $_SERVER['HTTP_HOST'] . $dir . '/' . $code;
 
 json_out(['ok' => true, 'code' => $code, 'url' => $url]);

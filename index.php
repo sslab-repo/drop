@@ -73,6 +73,8 @@ $protected = $cfg['protected'];
   .progress { margin-top:1.2rem; }
   .bar { height:10px; background:var(--gray); overflow:hidden; }
   .bar > div { height:100%; width:0%; background:var(--red); transition:width .12s linear; }
+  .bar > div.pulse { animation:pulse 1.2s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity:.4; } }
   .ptext { display:flex; justify-content:space-between; font-size:.8rem;
            color:var(--muted); margin-top:.35rem; }
 
@@ -82,6 +84,8 @@ $protected = $cfg['protected'];
   .result .link { font-family:ui-monospace, monospace; word-break:break-all; font-size:.92rem; }
   .result button { margin-top:.6rem; background:var(--ok); }
   .result button:hover { background:#166028; }
+  .result .again { background:var(--black); }
+  .result .again:hover { background:#333; }
   .error { margin-top:1rem; color:var(--err); font-size:.9rem; font-weight:600; }
 
   /* --- disclaimer --- */
@@ -149,6 +153,7 @@ $protected = $cfg['protected'];
       <div>✅ Uploaded — your link:</div>
       <div class="link" id="link"></div>
       <button type="button" id="copy">Copy link</button>
+      <button type="button" id="again" class="again">Upload another file</button>
     </div>
   </div>
 
@@ -252,10 +257,18 @@ $('form').addEventListener('submit', e => {
     $('fill').style.width = pct + '%';
     $('pct').textContent = pct + '%';
     $('pbytes').textContent = fmt(ev.loaded) + ' / ' + fmt(ev.total);
+    if (ev.loaded >= ev.total) {
+      // Bytes are all sent — now the server moves/stores the file, which can
+      // take a while for big files. Show that instead of looking frozen.
+      $('pct').textContent = 'Upload complete — server is storing the file, please wait…';
+      $('pbytes').textContent = '';
+      $('fill').classList.add('pulse');
+    }
   });
 
   xhr.addEventListener('load', () => {
     $('btn').disabled = false;
+    $('fill').classList.remove('pulse');
     let res;
     try { res = JSON.parse(xhr.responseText); }
     catch { showError('Unexpected server response.'); return; }
@@ -271,6 +284,9 @@ $('form').addEventListener('submit', e => {
       showError(res.error || 'Upload failed.');
       return;
     }
+    // If this upload went through with a password, the server granted trust —
+    // don't ask for the password again on the next upload.
+    if (PROTECTED.includes($('expiration').value)) { TRUSTED = true; updatePwRow(); }
     $('form').classList.add('hidden');
     $('link').textContent = res.url;
     $('result').classList.remove('hidden');
@@ -278,6 +294,7 @@ $('form').addEventListener('submit', e => {
 
   xhr.addEventListener('error', () => {
     $('btn').disabled = false;
+    $('fill').classList.remove('pulse');
     showError('Network error — please retry.');
   });
 
@@ -289,6 +306,19 @@ $('copy').addEventListener('click', () => {
     $('copy').textContent = 'Copied!';
     setTimeout(() => $('copy').textContent = 'Copy link', 1500);
   });
+});
+
+$('again').addEventListener('click', () => {
+  file = null;
+  fileInput.value = '';
+  fname.textContent = 'Choose a file';
+  $('result').classList.add('hidden');
+  $('progress').classList.add('hidden');
+  $('fill').style.width = '0%';
+  $('pct').textContent = '0%';
+  $('pbytes').textContent = '';
+  hideError();
+  $('form').classList.remove('hidden');
 });
 </script>
 </body>
