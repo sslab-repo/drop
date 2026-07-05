@@ -111,7 +111,7 @@ $protected = $cfg['protected'];
 </head>
 <body>
 
-<div class="topstrip"><a href="https://www.lewisu.edu">Lewis University</a> &nbsp;·&nbsp; Security Science Lab (SSLab)</div>
+<div class="topstrip"><a href="https://www.lewisu.edu">Lewis University</a> &nbsp;·&nbsp; Security Science Lab</div>
 <div class="masthead">
   <span class="wordmark">Lewis University</span>
   <span class="appname">SSLab <b>drop</b> — file sharing</span>
@@ -169,15 +169,14 @@ $protected = $cfg['protected'];
     <p><strong>Education, research, and study files only.</strong>
        Security is carefully tested, but <strong>unauthorized access or data
        loss may still occur</strong> — keep your own copy. Provided
-       <strong>as-is, with no legal liability</strong>. Operated by the
-       Security Science Lab (SSLab), a non-profit lab at Lewis University.</p>
+       <strong>as-is, with no legal liability</strong>. Operated by SSLab,
+       a non-profit lab at Lewis University.</p>
   </div>
 </div></main>
 
 <footer>
-  <div><strong>Security Science Lab (SSLab)</strong> — Lewis University</div>
-  <div class="fmuted">Education &amp; research use · Contact:
-    <a href="mailto:sslab@lewisu.edu">sslab@lewisu.edu</a></div>
+  <div><strong>SSLab@Lewis University</strong></div>
+  <div class="fmuted"><a href="mailto:sslab@lewisu.edu">sslab@lewisu.edu</a></div>
   <div class="credit">
     <!-- Claude mark -->
     <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
