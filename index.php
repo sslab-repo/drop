@@ -175,7 +175,7 @@ $protected = $cfg['protected'];
 </div></main>
 
 <footer>
-  <div><strong>SSLab@Lewis University</strong></div>
+  <div><strong>Copyright - Dr. Jake Cho, SSLab@Lewis University</strong></div>
   <div class="fmuted"><a href="mailto:sslab@lewisu.edu">sslab@lewisu.edu</a> ·
     <a href="apidoc.php">API Reference</a></div>
   <div class="credit">

@@ -116,7 +116,7 @@ curl "<?= $b ?>/api.php?action=stats"</code></pre>
 </main>
 
 <footer>
-  <div><strong>SSLab@Lewis University</strong></div>
+  <div><strong>Copyright - Dr. Jake Cho, SSLab@Lewis University</strong></div>
   <div><a href="mailto:sslab@lewisu.edu">sslab@lewisu.edu</a></div>
 </footer>
 </body>
