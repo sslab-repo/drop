@@ -108,7 +108,9 @@
 <main><div class="col">
   <div class="card">
     <h1>Share a file</h1>
-    <p class="sub">Upload up to 300&nbsp;MB and get a short download link.</p>
+    <p class="sub">Upload up to 300&nbsp;MB and get a short download link.
+      Link generation on our small server takes a few seconds for small files,
+      about 1–2 minutes for files over 100&nbsp;MB.</p>
 
     <form id="form">
       <div class="filebox" id="filebox">
@@ -203,11 +205,21 @@ filebox.addEventListener('drop', e => {
   if (e.dataTransfer.files.length) setFile(e.dataTransfer.files[0]);
 });
 
+// Link generation runs on a small shared server — set expectations by size.
+function estWait(bytes) {
+  const mb = bytes / 1048576;
+  if (mb < 10)  return 'a few seconds';
+  if (mb < 100) return 'under a minute';
+  return '1–2 minutes';
+}
+
 function setFile(f) {
   if (!f) return;
   if (f.size > MAX) { showError('File is larger than 300 MB.'); return; }
   file = f;
   fname.textContent = f.name + ' (' + fmt(f.size) + ')';
+  document.querySelector('.fhint').textContent =
+    'after upload, generating the link takes about ' + estWait(f.size);
   hideError();
 }
 
@@ -252,7 +264,8 @@ $('form').addEventListener('submit', e => {
     if (ev.loaded >= ev.total) {
       // Bytes are all sent — now the server moves/stores the file, which can
       // take a while for big files. Show that instead of looking frozen.
-      $('pct').textContent = 'Upload complete — server is storing the file, please wait…';
+      $('pct').textContent = 'Upload complete — generating your link, this takes about '
+                           + estWait(ev.total) + ' on our small server…';
       $('pbytes').textContent = '';
       $('fill').classList.add('pulse');
     }
@@ -304,6 +317,7 @@ $('again').addEventListener('click', () => {
   file = null;
   fileInput.value = '';
   fname.textContent = 'Choose a file';
+  document.querySelector('.fhint').textContent = 'click or drag & drop — max 300 MB';
   $('result').classList.add('hidden');
   $('progress').classList.add('hidden');
   $('fill').style.width = '0%';
