@@ -15,10 +15,12 @@ set_exception_handler(function (Throwable $e) {
 $db = db();
 $cfg = cfg();
 
-// Key from X-Api-Key or Authorization: Bearer
+// Key from X-Api-Key or Authorization: Bearer (FPM/CGI setups deliver the
+// rewritten header as REDIRECT_HTTP_AUTHORIZATION — check both)
 $key = $_SERVER['HTTP_X_API_KEY'] ?? '';
-if ($key === '' && preg_match('/^Bearer\s+(\S+)$/i', $_SERVER['HTTP_AUTHORIZATION'] ?? '', $m)) {
-    $key = $m[1];
+if ($key === '') {
+    $auth = $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '';
+    if (preg_match('/^Bearer\s+(\S+)$/i', $auth, $m)) $key = $m[1];
 }
 
 switch ($_GET['action'] ?? '') {

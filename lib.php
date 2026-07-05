@@ -164,7 +164,13 @@ function archive_row(PDO $db, array $row): void {
         }
 
         $hash = !empty($row['sha256']) ? $row['sha256'] : hash_file('sha256', $src);
-        rename($src, "$dir/$final");
+        if (!@rename($src, "$dir/$final")) {
+            // Archive not writable: keep the DB row so the next cron/access
+            // retries — NEVER let the blob fall through to the orphan sweep.
+            // (The link is already dead: callers 410 before serving.)
+            error_log("drop: cannot archive {$row['code']} to data/archive/ — check permissions");
+            return;
+        }
 
         $fmt = 'Y-m-d H:i:s T';
         $up  = (new DateTime('@' . $row['uploaded_at']))->setTimezone($tz)->format($fmt);

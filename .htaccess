@@ -2,6 +2,10 @@
 
 # Short links: /drop/Ab3xK9 → f.php?c=Ab3xK9  (legacy /drop/f/Ab3xK9 still works)
 RewriteEngine On
+
+# PHP-FPM/CGI strips the Authorization header — pass it through for Bearer auth
+RewriteCond %{HTTP:Authorization} .
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 RewriteRule ^f/([A-Za-z0-9]+)$ f.php?c=$1 [L,QSA]
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
