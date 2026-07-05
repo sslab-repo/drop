@@ -2,6 +2,12 @@
 // drop — upload handler. Returns JSON.
 require __DIR__ . '/lib.php';
 
+// Any uncaught server error must come back as JSON, not a blank page —
+// otherwise the uploader only sees "Unexpected server response".
+set_exception_handler(function (Throwable $e) {
+    json_out(['ok' => false, 'error' => 'Server error: ' . $e->getMessage()], 500);
+});
+
 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
     json_out(['ok' => false, 'error' => 'POST only'], 405);
 }
@@ -69,6 +75,9 @@ $db->prepare('INSERT INTO files (code, original_name, stored_name, size, mime, u
         $_SERVER['REMOTE_ADDR'] ?? null,
         hash_file('sha256', $dest),   // recorded now for the expiry archive metadata
     ]);
+
+stat_add($db, 'total_files', 1);
+stat_add($db, 'total_bytes', (int)$f['size']);
 
 // Build the short link from the current location: /drop/upload.php → /drop/CODE
 $dir = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/');

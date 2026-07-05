@@ -34,8 +34,28 @@ function db(): PDO {
             ip TEXT NOT NULL,
             ts INTEGER NOT NULL
         )');
+        // Lifetime counters (all-time bytes/files uploaded, survives expiry).
+        $db->exec('CREATE TABLE IF NOT EXISTS stats (
+            k TEXT PRIMARY KEY,
+            v INTEGER NOT NULL
+        )');
+        if ((int)$db->query('SELECT COUNT(*) FROM stats')->fetchColumn() === 0) {
+            // First run after this feature: seed from what is already stored.
+            [$n, $b] = $db->query('SELECT COUNT(*), COALESCE(SUM(size),0) FROM files')->fetch(PDO::FETCH_NUM);
+            $seed = $db->prepare('INSERT INTO stats (k, v) VALUES (?, ?)');
+            $seed->execute(['total_files', (int)$n]);
+            $seed->execute(['total_bytes', (int)$b]);
+        }
     }
     return $db;
+}
+
+function stat_add(PDO $db, string $k, int $v): void {
+    $st = $db->prepare('UPDATE stats SET v = v + ? WHERE k = ?');
+    $st->execute([$v, $k]);
+    if ($st->rowCount() === 0) {
+        $db->prepare('INSERT INTO stats (k, v) VALUES (?, ?)')->execute([$k, $v]);
+    }
 }
 
 // ---- password brute-force throttle: max 10 wrong attempts per IP per 15 min ----

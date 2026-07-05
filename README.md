@@ -76,6 +76,7 @@ Lives at `https://datapot.org/drop/`.
 | `index.php` | Upload page (progress bar, expiration picker, result link) |
 | `upload.php` | Receives the upload, enforces size/password, stores file |
 | `f.php` | Download handler for `/CODE` short links (legacy `/f/CODE` too) |
+| `stats.php` | Live service-size JSON polled by the main page |
 | `cleanup.php` | Cron target — archives expired files, deletes orphan blobs |
 | `config.php` | Password hash, secrets, size limit, expiration table |
 | `lib.php` | Shared helpers (DB, trust cookie, code generator) |

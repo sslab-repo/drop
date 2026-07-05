@@ -88,6 +88,9 @@ $protected = $cfg['protected'];
   .result .again:hover { background:#333; }
   .error { margin-top:1rem; color:var(--err); font-size:.9rem; font-weight:600; }
 
+  /* --- live service stats --- */
+  .stats { text-align:center; color:var(--muted); font-size:.76rem; margin-top:.8rem; }
+
   /* --- disclaimer --- */
   .notice { margin-top:1.2rem; background:var(--white);
             border:1px solid var(--border); border-left:4px solid var(--red);
@@ -159,8 +162,13 @@ $protected = $cfg['protected'];
     </div>
   </div>
 
+  <div class="stats" id="stats">&nbsp;</div>
+
   <div class="notice">
     <h2>⚠ Please read before using</h2>
+    <p><strong>Allowed files:</strong> only materials for <strong>education,
+       research, and study purposes</strong> may be uploaded. Sharing files for
+       any other purpose is not permitted on this service.</p>
     <p>Security of this service has been carefully considered and tested.
        Nevertheless, <strong>unauthorized access or loss of data may still
        occur</strong>, and download links stop working automatically when
@@ -232,10 +240,26 @@ function setFile(f) {
 }
 
 function fmt(b) {
+  if (b >= 1073741824) return (b / 1073741824).toFixed(2) + ' GB';
   if (b >= 1048576) return (b / 1048576).toFixed(1) + ' MB';
   if (b >= 1024) return (b / 1024).toFixed(1) + ' KB';
   return b + ' B';
 }
+
+// --- live service size, refreshed continuously ---
+async function refreshStats() {
+  try {
+    const r = await fetch('stats.php');
+    const s = await r.json();
+    if (!s.ok) return;
+    $('stats').textContent =
+      'Stored now: ' + s.active_files + ' file' + (s.active_files === 1 ? '' : 's')
+      + ' (' + fmt(s.active_bytes) + ') · archived: ' + fmt(s.archived_bytes)
+      + ' · all-time uploaded: ' + s.lifetime_files + ' files (' + fmt(s.lifetime_bytes) + ')';
+  } catch (e) { /* stats are cosmetic — never break the page */ }
+}
+refreshStats();
+setInterval(refreshStats, 15000);
 
 $('expiration').addEventListener('change', updatePwRow);
 function updatePwRow() {
@@ -284,7 +308,7 @@ $('form').addEventListener('submit', e => {
     $('fill').classList.remove('pulse');
     let res;
     try { res = JSON.parse(xhr.responseText); }
-    catch { showError('Unexpected server response.'); return; }
+    catch { showError('Unexpected server response (HTTP ' + xhr.status + ').'); return; }
     if (!res.ok) {
       $('progress').classList.add('hidden');
       $('fill').style.width = '0%';
@@ -303,6 +327,7 @@ $('form').addEventListener('submit', e => {
     $('form').classList.add('hidden');
     $('link').textContent = res.url;
     $('result').classList.remove('hidden');
+    refreshStats();
   });
 
   xhr.addEventListener('error', () => {
