@@ -56,8 +56,8 @@ if (!move_uploaded_file($f['tmp_name'], $dest)) {
 }
 
 $seconds = $cfg['expirations'][$expKey][1];
-$db->prepare('INSERT INTO files (code, original_name, stored_name, size, mime, uploaded_at, expires_at)
-              VALUES (?, ?, ?, ?, ?, ?, ?)')
+$db->prepare('INSERT INTO files (code, original_name, stored_name, size, mime, uploaded_at, expires_at, ip, sha256)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
    ->execute([
         $code,
         $f['name'],
@@ -66,6 +66,8 @@ $db->prepare('INSERT INTO files (code, original_name, stored_name, size, mime, u
         $f['type'] ?: null,
         time(),
         $seconds === null ? null : time() + $seconds,
+        $_SERVER['REMOTE_ADDR'] ?? null,
+        hash_file('sha256', $dest),   // recorded now for the expiry archive metadata
     ]);
 
 // Build the short link from the current location: /drop/upload.php → /drop/CODE

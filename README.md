@@ -14,7 +14,13 @@ Lives at `https://datapot.org/drop/`.
   a correct password trusts that computer for **30 days** (signed cookie)
 - Short download links: `https://datapot.org/drop/Ab3xK9`
 - Downloads are always forced as attachments (nothing renders in the browser)
-- Expired files removed by daily cron + checked lazily on every download
+- Expiration enforced by daily cron + checked lazily on every download.
+  Expired files are **archived, not deleted**: the blob moves to
+  `data/archive/` as `name_expired_MMDDYYYY.ext` plus a
+  `name_expired_MMDDYYYY.ext.md` metadata file (source IP, upload/expiry/
+  archive times in Chicago time, size, SHA-256, download count) — the
+  short link itself dies (410). Prune `data/archive/` manually when it
+  grows too large.
 
 ## Requirements
 
@@ -70,7 +76,7 @@ Lives at `https://datapot.org/drop/`.
 | `index.php` | Upload page (progress bar, expiration picker, result link) |
 | `upload.php` | Receives the upload, enforces size/password, stores file |
 | `f.php` | Download handler for `/CODE` short links (legacy `/f/CODE` too) |
-| `cleanup.php` | Cron target — deletes expired files and orphan blobs |
+| `cleanup.php` | Cron target — archives expired files, deletes orphan blobs |
 | `config.php` | Password hash, secrets, size limit, expiration table |
 | `lib.php` | Shared helpers (DB, trust cookie, code generator) |
 | `data/` | SQLite DB + uploaded blobs (web access denied) |

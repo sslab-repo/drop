@@ -20,7 +20,7 @@ if (!$row) {
 
 // Lazy expiry check — never serve an expired file even if cron hasn't run yet.
 if ($row['expires_at'] !== null && (int)$row['expires_at'] < time()) {
-    delete_row($db, $row);
+    archive_row($db, $row);
     http_response_code(410);
     exit('This link has expired.');
 }

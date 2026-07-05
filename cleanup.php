@@ -1,5 +1,5 @@
 <?php
-// drop — cron target: deletes expired files.
+// drop — cron target: archives expired files (data/archive/) and kills their links.
 //
 // Preferred crontab (daily at 03:10):
 //   10 3 * * * php /path/to/drop/cleanup.php
@@ -22,6 +22,7 @@ $known = $db->query('SELECT stored_name FROM files')->fetchAll(PDO::FETCH_COLUMN
 $known = array_flip($known);
 $orphans = 0;
 foreach (glob(__DIR__ . '/data/*') as $path) {
+    if (is_dir($path)) continue; // e.g. data/archive/ — never touched by the sweep
     $base = basename($path);
     if (str_starts_with($base, '.') || str_starts_with($base, 'app.sqlite')) continue;
     // Age guard: a fresh blob may not have its DB row yet (mid-upload) — never
@@ -32,4 +33,4 @@ foreach (glob(__DIR__ . '/data/*') as $path) {
     }
 }
 
-echo "expired removed: $removed, orphans removed: $orphans\n";
+echo "expired archived: $removed, orphans removed: $orphans\n";

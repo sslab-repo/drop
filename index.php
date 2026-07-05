@@ -161,8 +161,8 @@ $protected = $cfg['protected'];
     <h2>⚠ Please read before using</h2>
     <p>Security of this service has been carefully considered and tested.
        Nevertheless, <strong>unauthorized access or loss of data may still
-       occur</strong>, and files are removed automatically when they expire.
-       Keep your own copy of anything you upload.</p>
+       occur</strong>, and download links stop working automatically when
+       files expire. Keep your own copy of anything you upload.</p>
     <p>This system is provided <strong>as-is, with no legal obligation or
        liability</strong> on the side of its operators.</p>
     <p>Developed for <strong>education and research purposes</strong> by the
