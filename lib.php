@@ -43,6 +43,12 @@ function db(): PDO {
             ip TEXT NOT NULL,
             ts INTEGER NOT NULL
         )');
+        // Per-IP daily quota tracking (survives expiry/archiving of the files).
+        $db->exec('CREATE TABLE IF NOT EXISTS upload_log (
+            ip TEXT NOT NULL,
+            bytes INTEGER NOT NULL,
+            ts INTEGER NOT NULL
+        )');
         // Lifetime counters (all-time bytes/files uploaded, survives expiry).
         $db->exec('CREATE TABLE IF NOT EXISTS stats (
             k TEXT PRIMARY KEY,
@@ -105,6 +111,17 @@ function grant_trust(): void {
         'samesite' => 'Lax',
         'secure'   => !empty($_SERVER['HTTPS']),
     ]);
+}
+
+// ---- per-IP daily upload quota ----
+// New config keys default via ?? so a hand-edited server config.php keeps working.
+
+function ip_quota_exceeded(PDO $db, string $ip, int $addBytes): bool {
+    $limit = (int)(cfg()['daily_ip_bytes'] ?? 1024 * 1024 * 1024);
+    $db->prepare('DELETE FROM upload_log WHERE ts < ?')->execute([time() - 2 * 86400]);
+    $st = $db->prepare('SELECT COALESCE(SUM(bytes),0) FROM upload_log WHERE ip = ? AND ts > ?');
+    $st->execute([$ip, time() - 86400]);
+    return ((int)$st->fetchColumn() + $addBytes) > $limit;
 }
 
 // ---- API keys ----
@@ -171,6 +188,7 @@ function archive_row(PDO $db, array $row): void {
             error_log("drop: cannot archive {$row['code']} to data/archive/ — check permissions");
             return;
         }
+        @touch("$dir/$final"); // rename keeps the old mtime — stamp archive time for retention
 
         $fmt = 'Y-m-d H:i:s T';
         $up  = (new DateTime('@' . $row['uploaded_at']))->setTimezone($tz)->format($fmt);
@@ -242,6 +260,8 @@ function store_file(PDO $db, array $f, string $expKey, ?string $apiOwner = null)
         ]);
     stat_add($db, 'total_files', 1);
     stat_add($db, 'total_bytes', (int)$f['size']);
+    $db->prepare('INSERT INTO upload_log (ip, bytes, ts) VALUES (?, ?, ?)')
+       ->execute([$_SERVER['REMOTE_ADDR'] ?? 'unknown', (int)$f['size'], time()]);
     return [$code, null];
 }
 

@@ -19,8 +19,11 @@ Lives at `https://datapot.org/drop/`.
   `data/archive/` as `name_expired_MMDDYYYY.ext` plus a
   `name_expired_MMDDYYYY.ext.md` metadata file (source IP, upload/expiry/
   archive times in Chicago time, size, SHA-256, download count) — the
-  short link itself dies (410). Prune `data/archive/` manually when it
-  grows too large.
+  short link itself dies (410). Retention is automatic: archived **blobs
+  are deleted permanently after 7 days**, their **`.md` metadata after
+  30 days** (both configurable in `config.php`).
+- Per-IP quota: **1 GB per rolling 24 h** across web and API uploads
+  (HTTP 429 beyond it; `daily_ip_bytes` in `config.php`).
 
 ## Requirements
 
@@ -135,9 +138,10 @@ invalid expiration, trust cookie issue/use, and tampered-cookie rejection.
 - Downloads send `Content-Disposition: attachment` + `nosniff`, so uploaded
   HTML/JS can never execute on the site's origin; `"`/`\` are stripped from
   the filename so it cannot break the header.
-- **Known accepted risks:** short-expiry uploads (1d/30d) need no password, so
-  anyone who finds the URL can consume disk quota until expiry — monitor
-  usage, or add the short keys to `protected` in `config.php` to require the
-  password for everything. The whole file uploads before the password is
-  checked (single-request design). No virus scanning — links are only as safe
-  as the people you share them with.
+- **Known accepted risks:** short-expiry uploads (1d/30d) need no password —
+  abuse is bounded by the 1 GB/day per-IP quota, but a distributed uploader
+  could still consume disk; monitor usage, or add the short keys to
+  `protected` in `config.php` to require the password for everything. The
+  whole file uploads before the password is checked (single-request design).
+  No virus scanning — links are only as safe as the people you share them
+  with.

@@ -61,6 +61,10 @@ case 'upload':
         }
     }
 
+    if (ip_quota_exceeded($db, $_SERVER['REMOTE_ADDR'] ?? 'unknown', (int)$f['size'])) {
+        json_out(['ok' => false, 'error' => 'Daily upload limit reached (1 GB per day per address).'], 429);
+    }
+
     [$code, $err] = store_file($db, $f, $expKey, $owner);
     if ($err !== null) {
         json_out(['ok' => false, 'error' => $err], 500);

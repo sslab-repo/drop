@@ -122,7 +122,8 @@ $protected = $cfg['protected'];
     <h1>Share a file</h1>
     <p class="sub">Upload up to 300&nbsp;MB and get a short download link.
       Link generation on our small server takes a few seconds for small files,
-      about 1–2 minutes for files over 100&nbsp;MB.</p>
+      about 1–2 minutes for files over 100&nbsp;MB. Daily limit: 1&nbsp;GB per
+      address.</p>
 
     <form id="form">
       <div class="filebox" id="filebox">

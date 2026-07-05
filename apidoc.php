@@ -111,11 +111,15 @@ curl "<?= $b ?>/api.php?action=stats"</code></pre>
   <p>Every error is JSON: <code>{"ok":false,"error":"…"}</code> with a
      matching HTTP status (<code>400</code> bad request, <code>401</code>
      missing/invalid key, <code>404</code> not found, <code>410</code> expired,
-     <code>413</code> too large, <code>429</code> throttled).</p>
+     <code>413</code> too large, <code>429</code> throttled or over quota).</p>
 
-  <h2>Rules</h2>
-  <p>Education, research, and study files only. Provided as-is with no legal
-     liability. Operated by SSLab, a non-profit lab at Lewis University.</p>
+  <h2>Limits &amp; rules</h2>
+  <p>Max <strong>300 MB per file</strong> and <strong>1 GB per address per
+     day</strong> (rolling 24 h — HTTP 429 when exceeded). Expired files stop
+     being downloadable immediately; their data is permanently deleted about a
+     week after expiry. Education, research, and study files only. Provided
+     as-is with no legal liability. Operated by SSLab, a non-profit lab at
+     Lewis University.</p>
 </main>
 
 <footer>

@@ -33,4 +33,21 @@ foreach (glob(__DIR__ . '/data/*') as $path) {
     }
 }
 
-echo "expired archived: $removed, orphans removed: $orphans\n";
+// Archive retention: expired blobs are kept 7 days then deleted permanently;
+// their .md metadata sidecars survive 30 days. (Days configurable in config.php.)
+$cfg = cfg();
+$keepBlob = time() - 86400 * (int)($cfg['archive_keep_days'] ?? 7);
+$keepMeta = time() - 86400 * (int)($cfg['archive_meta_keep_days'] ?? 30);
+$blobsPurged = $metaPurged = 0;
+foreach (glob(__DIR__ . '/data/archive/*') as $path) {
+    if (!is_file($path)) continue;
+    $isMeta = substr($path, -3) === '.md';
+    $mtime  = filemtime($path);
+    if ($isMeta ? $mtime < $keepMeta : $mtime < $keepBlob) {
+        @unlink($path);
+        $isMeta ? $metaPurged++ : $blobsPurged++;
+    }
+}
+
+echo "expired archived: $removed, orphans removed: $orphans, "
+   . "archive blobs purged: $blobsPurged, metadata purged: $metaPurged\n";

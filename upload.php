@@ -46,6 +46,11 @@ if (in_array($expKey, $cfg['protected'], true) && !is_trusted()) {
     grant_trust(); // correct password → trust this computer for 30 days
 }
 
+$ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+if (ip_quota_exceeded(db(), $ip, (int)$f['size'])) {
+    json_out(['ok' => false, 'error' => 'Daily upload limit reached (1 GB per day per address). Try again tomorrow.'], 429);
+}
+
 [$code, $err] = store_file(db(), $f, $expKey);
 if ($err !== null) {
     json_out(['ok' => false, 'error' => $err], 500);

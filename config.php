@@ -16,6 +16,14 @@ return [
     // Max upload size in bytes (300 MB).
     'max_bytes'     => 300 * 1024 * 1024,
 
+    // Per-IP upload quota: max bytes per rolling 24h (1 GB).
+    'daily_ip_bytes' => 1024 * 1024 * 1024,
+
+    // Archive retention (days): expired blobs are deleted permanently after
+    // 'archive_keep_days'; their .md metadata survives until 'archive_meta_keep_days'.
+    'archive_keep_days'      => 7,
+    'archive_meta_keep_days' => 30,
+
     // How long a correct password trusts this computer (seconds) — 30 days.
     'trust_seconds' => 30 * 86400,
 
