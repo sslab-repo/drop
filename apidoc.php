@@ -67,15 +67,18 @@ $b = htmlspecialchars($base);
      Base URL: <code><?= $b ?></code> · <a href="./">back to upload page</a></p>
 
   <h2>Authentication</h2>
-  <p>Expirations of <strong>30 days or less need no key</strong>. Longer
-     expirations (<code>6m</code>, <code>1y</code>, <code>forever</code>)
-     require an API key in the <code>X-Api-Key</code> header (or
-     <code>Authorization: Bearer …</code>). Keys are issued by the lab —
-     ask <a href="mailto:sslab@lewisu.edu">sslab@lewisu.edu</a>.
+  <p><strong>Always send the <code>X-Api-Key</code> header on uploads</strong> —
+     the hosting firewall rejects file POSTs without it (HTML 403 instead of a
+     JSON reply). Expirations of <strong>30 days or less need no real key</strong>:
+     use the literal value <code>none</code>. Longer expirations
+     (<code>6m</code>, <code>1y</code>, <code>forever</code>) require a valid
+     key (<code>Authorization: Bearer …</code> also accepted). Keys are issued
+     by the lab — ask <a href="mailto:sslab@lewisu.edu">sslab@lewisu.edu</a>.
      Invalid-key attempts are throttled (10 per IP / 15 min).</p>
 
   <h2>1 · Upload</h2>
   <pre><code>curl -X POST "<?= $b ?>/api.php?action=upload" \
+     -H "X-Api-Key: none" \
      -F "file=@report.pdf" \
      -F "expiration=30d"
 

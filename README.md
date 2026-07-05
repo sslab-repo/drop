@@ -89,9 +89,11 @@ Lives at `https://datapot.org/drop/`.
 
 `api.php` speaks JSON: `?action=upload` (multipart `file` + `expiration`),
 `?action=info&code=…`, `?action=stats`; downloads are just `GET /drop/CODE`.
-Expirations ≤ 30 days need no key; `6m`/`1y`/`forever` require an API key in
-the `X-Api-Key` header. Full reference with curl examples: `apidoc.php`
-(linked from the main page footer).
+Always send the `X-Api-Key` header on uploads — the host WAF rejects
+non-browser file POSTs without it. Expirations ≤ 30 days need no real key
+(use the literal value `none`); `6m`/`1y`/`forever` require a valid key.
+Full reference with curl examples: `apidoc.php` (linked from the main page
+footer).
 
 Keys are managed only from the server CLI (no lifespan management by design):
 

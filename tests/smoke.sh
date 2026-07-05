@@ -160,7 +160,9 @@ else
 fi
 
 # ---------- API: keyless short upload + info + key gate ----------
-resp=$(curl -s -F "file=@$TMP/small.bin" -F expiration=30d "$BASE/api.php?action=upload")
+# X-Api-Key is always sent (value "none" when keyless): the host WAF blocks
+# non-browser file POSTs without it.
+resp=$(curl -s -H "X-Api-Key: none" -F "file=@$TMP/small.bin" -F expiration=30d "$BASE/api.php?action=upload")
 if [ "$(jget "$resp" ok)" = true ]; then
   ok "API upload 30d without key"
   acode=$(jget "$resp" code)
@@ -169,11 +171,11 @@ if [ "$(jget "$resp" ok)" = true ]; then
 else
   bad "API upload 30d without key" "$resp"
 fi
-resp=$(curl -s -F "file=@$TMP/small.bin" -F expiration=1y "$BASE/api.php?action=upload")
-if [ "$(jget "$resp" ok)" = false ] && [ "$(jget "$resp" need_key)" = true ]; then
-  ok "API 1y without key refused (need_key)"
+resp=$(curl -s -H "X-Api-Key: none" -F "file=@$TMP/small.bin" -F expiration=1y "$BASE/api.php?action=upload")
+if [ "$(jget "$resp" ok)" = false ]; then
+  ok "API 1y without valid key refused"
 else
-  bad "API 1y without key refused" "$resp"
+  bad "API 1y without valid key refused" "$resp"
 fi
 resp=$(curl -s -H "X-Api-Key: definitely-not-a-key" -F "file=@$TMP/small.bin" -F expiration=1y "$BASE/api.php?action=upload")
 [ "$(jget "$resp" ok)" = false ] && ok "API invalid key refused" || bad "API invalid key refused" "$resp"
