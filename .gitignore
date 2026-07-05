@@ -1,0 +1,3 @@
+# Runtime data — uploaded blobs and the SQLite DB live on the server only
+data/*
+!data/.htaccess

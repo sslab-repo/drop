@@ -1,0 +1,295 @@
+<?php
+// drop — upload page.
+require __DIR__ . '/lib.php';
+header('X-Frame-Options: DENY');
+header('X-Content-Type-Options: nosniff');
+$cfg = cfg();
+$trusted = is_trusted();
+$protected = $cfg['protected'];
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>drop — SSLab file sharing | Lewis University</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  /* Palette taken from lewisu.edu/css/styles.css */
+  :root { --red:#c22033; --darkRed:#940731; --black:#000; --white:#fff;
+          --gray:#dcdcd7; --bg:#f1f1ef; --text:#1a1a1a; --muted:#7e7f74;
+          --border:#dcdcd7; --ok:#1e7a34; --err:#c22033; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family:'Montserrat', system-ui, sans-serif;
+         background:var(--bg); color:var(--text);
+         min-height:100vh; display:flex; flex-direction:column; }
+
+  /* --- header, lewisu.edu style: thin black strip + white bar --- */
+  .topstrip { background:var(--black); color:var(--white);
+              font-size:.72rem; letter-spacing:.08em; text-transform:uppercase;
+              padding:.45rem 1.2rem; }
+  .topstrip a { color:var(--white); text-decoration:none; }
+  .masthead { background:var(--white); border-bottom:4px solid var(--red);
+              padding:1rem 1.2rem; display:flex; align-items:baseline; gap:.75rem; flex-wrap:wrap; }
+  .wordmark { color:var(--red); font-weight:800; letter-spacing:.06em;
+              font-size:1.15rem; text-transform:uppercase; }
+  .appname  { color:var(--black); font-weight:300; font-size:1.15rem; }
+  .appname b { font-weight:700; }
+
+  main { flex:1; display:flex; align-items:flex-start; justify-content:center;
+         padding:2rem 1rem; }
+  .col { width:100%; max-width:500px; }
+
+  .card { background:var(--white); border:1px solid var(--border);
+          padding:1.8rem; box-shadow:0 2px 10px rgba(0,0,0,.05); }
+  h1 { margin:0 0 .3rem; font-size:1.35rem; font-weight:700; }
+  .sub { color:var(--muted); margin:0 0 1.4rem; font-size:.88rem; }
+
+  label { display:block; font-size:.8rem; font-weight:600; margin:.9rem 0 .35rem;
+          text-transform:uppercase; letter-spacing:.05em; }
+  select, input[type=password] {
+    width:100%; padding:.55rem .7rem; border:1px solid var(--border);
+    background:var(--white); color:var(--text); font-size:.95rem;
+    font-family:inherit; border-radius:0; }
+  select:focus, input:focus { outline:2px solid var(--red); outline-offset:-1px; }
+
+  .filebox { border:2px dashed var(--gray); padding:1.4rem; text-align:center;
+             cursor:pointer; transition:border-color .15s; background:var(--bg); }
+  .filebox:hover, .filebox.drag { border-color:var(--red); }
+  .filebox .fname { font-weight:600; word-break:break-all; }
+  .filebox .fhint { color:var(--muted); font-size:.82rem; margin-top:.25rem; }
+
+  button { width:100%; margin-top:1.2rem; padding:.75rem; border:0;
+           background:var(--red); color:var(--white); font-size:.95rem;
+           font-weight:700; cursor:pointer; font-family:inherit;
+           text-transform:uppercase; letter-spacing:.08em; }
+  button:hover { background:var(--darkRed); }
+  button:disabled { opacity:.5; cursor:default; }
+  .hidden { display:none; }
+
+  /* progress bar */
+  .progress { margin-top:1.2rem; }
+  .bar { height:10px; background:var(--gray); overflow:hidden; }
+  .bar > div { height:100%; width:0%; background:var(--red); transition:width .12s linear; }
+  .ptext { display:flex; justify-content:space-between; font-size:.8rem;
+           color:var(--muted); margin-top:.35rem; }
+
+  /* result */
+  .result { margin-top:1.2rem; padding:1rem; border-left:4px solid var(--ok);
+            background:var(--bg); }
+  .result .link { font-family:ui-monospace, monospace; word-break:break-all; font-size:.92rem; }
+  .result button { margin-top:.6rem; background:var(--ok); }
+  .result button:hover { background:#166028; }
+  .error { margin-top:1rem; color:var(--err); font-size:.9rem; font-weight:600; }
+
+  /* --- disclaimer --- */
+  .notice { margin-top:1.2rem; background:var(--white);
+            border:1px solid var(--border); border-left:4px solid var(--red);
+            padding:1rem 1.2rem; font-size:.8rem; line-height:1.55; color:var(--text); }
+  .notice h2 { margin:0 0 .4rem; font-size:.85rem; text-transform:uppercase;
+               letter-spacing:.06em; color:var(--red); }
+  .notice p { margin:.4rem 0; }
+
+  /* --- footer, lewisu.edu style: black --- */
+  footer { background:var(--black); color:var(--white); padding:1.4rem 1.2rem;
+           font-size:.78rem; line-height:1.6; }
+  footer a { color:var(--white); }
+  footer .fmuted { color:#bab9af; }
+  .credit { display:flex; align-items:center; gap:.45rem; margin-top:.9rem;
+            color:#bab9af; font-size:.74rem; }
+  .credit svg { flex-shrink:0; }
+</style>
+</head>
+<body>
+
+<div class="topstrip"><a href="https://www.lewisu.edu">Lewis University</a> &nbsp;·&nbsp; Security Science Lab (SSLab)</div>
+<div class="masthead">
+  <span class="wordmark">Lewis University</span>
+  <span class="appname">SSLab <b>drop</b> — file sharing</span>
+</div>
+
+<main><div class="col">
+  <div class="card">
+    <h1>Share a file</h1>
+    <p class="sub">Upload up to 300&nbsp;MB and get a short download link.</p>
+
+    <form id="form">
+      <div class="filebox" id="filebox">
+        <div class="fname" id="fname">Choose a file</div>
+        <div class="fhint">click or drag &amp; drop — max 300 MB</div>
+        <input type="file" id="file" class="hidden">
+      </div>
+
+      <label for="expiration">Expires after</label>
+      <select id="expiration" name="expiration">
+        <?php foreach ($cfg['expirations'] as $key => [$label, $_]): ?>
+        <option value="<?= htmlspecialchars($key) ?>"><?= htmlspecialchars($label) ?><?=
+          in_array($key, $protected, true) && !$trusted ? ' (password)' : '' ?></option>
+        <?php endforeach; ?>
+      </select>
+
+      <div id="pwrow" class="hidden">
+        <label for="password">Upload password</label>
+        <input type="password" id="password" autocomplete="off">
+      </div>
+
+      <button type="submit" id="btn">Upload</button>
+
+      <div class="progress hidden" id="progress">
+        <div class="bar"><div id="fill"></div></div>
+        <div class="ptext"><span id="pct">0%</span><span id="pbytes"></span></div>
+      </div>
+
+      <div class="error hidden" id="error"></div>
+    </form>
+
+    <div class="result hidden" id="result">
+      <div>✅ Uploaded — your link:</div>
+      <div class="link" id="link"></div>
+      <button type="button" id="copy">Copy link</button>
+    </div>
+  </div>
+
+  <div class="notice">
+    <h2>⚠ Please read before using</h2>
+    <p>Security of this service has been carefully considered and tested.
+       Nevertheless, <strong>unauthorized access or loss of data may still
+       occur</strong>, and files are removed automatically when they expire.
+       Keep your own copy of anything you upload.</p>
+    <p>This system is provided <strong>as-is, with no legal obligation or
+       liability</strong> on the side of its operators.</p>
+    <p>Developed for <strong>education and research purposes</strong> by the
+       Security Science Lab (SSLab), a non-profit laboratory that is part of
+       Lewis University.</p>
+  </div>
+</div></main>
+
+<footer>
+  <div><strong>Security Science Lab (SSLab)</strong> — Lewis University</div>
+  <div class="fmuted">Education &amp; research use · Contact:
+    <a href="mailto:sslab@lewisu.edu">sslab@lewisu.edu</a></div>
+  <div class="credit">
+    <!-- Claude mark -->
+    <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
+      <g stroke="#D97757" stroke-width="2.4" stroke-linecap="round">
+        <line x1="12" y1="2.5" x2="12" y2="7" />
+        <line x1="12" y1="2.5" x2="12" y2="7" transform="rotate(45 12 12)" />
+        <line x1="12" y1="2.5" x2="12" y2="7" transform="rotate(90 12 12)" />
+        <line x1="12" y1="2.5" x2="12" y2="7" transform="rotate(135 12 12)" />
+        <line x1="12" y1="2.5" x2="12" y2="7" transform="rotate(180 12 12)" />
+        <line x1="12" y1="2.5" x2="12" y2="7" transform="rotate(225 12 12)" />
+        <line x1="12" y1="2.5" x2="12" y2="7" transform="rotate(270 12 12)" />
+        <line x1="12" y1="2.5" x2="12" y2="7" transform="rotate(315 12 12)" />
+      </g>
+    </svg>
+    <span>Designed by SSLab, Coded by Fable 5</span>
+  </div>
+</footer>
+
+<script>
+const MAX = <?= (int)$cfg['max_bytes'] ?>;
+const PROTECTED = <?= json_encode(array_values($protected)) ?>;
+let TRUSTED = <?= $trusted ? 'true' : 'false' ?>;
+
+const $ = id => document.getElementById(id);
+const filebox = $('filebox'), fileInput = $('file'), fname = $('fname');
+let file = null;
+
+filebox.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', () => setFile(fileInput.files[0]));
+filebox.addEventListener('dragover', e => { e.preventDefault(); filebox.classList.add('drag'); });
+filebox.addEventListener('dragleave', () => filebox.classList.remove('drag'));
+filebox.addEventListener('drop', e => {
+  e.preventDefault(); filebox.classList.remove('drag');
+  if (e.dataTransfer.files.length) setFile(e.dataTransfer.files[0]);
+});
+
+function setFile(f) {
+  if (!f) return;
+  if (f.size > MAX) { showError('File is larger than 300 MB.'); return; }
+  file = f;
+  fname.textContent = f.name + ' (' + fmt(f.size) + ')';
+  hideError();
+}
+
+function fmt(b) {
+  if (b >= 1048576) return (b / 1048576).toFixed(1) + ' MB';
+  if (b >= 1024) return (b / 1024).toFixed(1) + ' KB';
+  return b + ' B';
+}
+
+$('expiration').addEventListener('change', updatePwRow);
+function updatePwRow() {
+  const needPw = PROTECTED.includes($('expiration').value) && !TRUSTED;
+  $('pwrow').classList.toggle('hidden', !needPw);
+}
+updatePwRow();
+
+function showError(msg) { const e = $('error'); e.textContent = msg; e.classList.remove('hidden'); }
+function hideError() { $('error').classList.add('hidden'); }
+
+$('form').addEventListener('submit', e => {
+  e.preventDefault();
+  hideError();
+  if (!file) { showError('Choose a file first.'); return; }
+
+  const fd = new FormData();
+  fd.append('file', file);
+  fd.append('expiration', $('expiration').value);
+  fd.append('password', $('password').value);
+
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST', 'upload.php');
+
+  // --- upload progress bar ---
+  $('progress').classList.remove('hidden');
+  $('btn').disabled = true;
+  xhr.upload.addEventListener('progress', ev => {
+    if (!ev.lengthComputable) return;
+    const pct = Math.round(ev.loaded / ev.total * 100);
+    $('fill').style.width = pct + '%';
+    $('pct').textContent = pct + '%';
+    $('pbytes').textContent = fmt(ev.loaded) + ' / ' + fmt(ev.total);
+  });
+
+  xhr.addEventListener('load', () => {
+    $('btn').disabled = false;
+    let res;
+    try { res = JSON.parse(xhr.responseText); }
+    catch { showError('Unexpected server response.'); return; }
+    if (!res.ok) {
+      $('progress').classList.add('hidden');
+      $('fill').style.width = '0%';
+      if (res.need_password) {
+        // Server-side trust expired (or password was wrong) — reveal the field.
+        TRUSTED = false;
+        updatePwRow();
+        $('password').focus();
+      }
+      showError(res.error || 'Upload failed.');
+      return;
+    }
+    $('form').classList.add('hidden');
+    $('link').textContent = res.url;
+    $('result').classList.remove('hidden');
+  });
+
+  xhr.addEventListener('error', () => {
+    $('btn').disabled = false;
+    showError('Network error — please retry.');
+  });
+
+  xhr.send(fd);
+});
+
+$('copy').addEventListener('click', () => {
+  navigator.clipboard.writeText($('link').textContent).then(() => {
+    $('copy').textContent = 'Copied!';
+    setTimeout(() => $('copy').textContent = 'Copy link', 1500);
+  });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+# drop — Apache config for shared hosting
+
+# Short links: /drop/f/Ab3xK9 → f.php?c=Ab3xK9
+RewriteEngine On
+RewriteRule ^f/([A-Za-z0-9]+)$ f.php?c=$1 [L,QSA]
+
+# Never serve these directly
+<FilesMatch "^(config\.php|lib\.php|\.user\.ini)$">
+  Require all denied
+</FilesMatch>
+
+# Upload size limits (works when PHP runs as mod_php; if your host uses
+# PHP-FPM/CGI, the same values are in .user.ini instead)
+<IfModule mod_php.c>
+  php_value upload_max_filesize 310M
+  php_value post_max_size 320M
+  php_value max_execution_time 600
+  php_value max_input_time 600
+  php_value memory_limit 256M
+</IfModule>
