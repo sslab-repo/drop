@@ -29,8 +29,6 @@ $b = htmlspecialchars($base);
   .topstrip a { color:var(--white); text-decoration:none; }
   .masthead { background:var(--white); border-bottom:4px solid var(--red);
               padding:1rem 1.2rem; display:flex; align-items:baseline; gap:.75rem; flex-wrap:wrap; }
-  .wordmark { color:var(--red); font-weight:800; letter-spacing:.06em;
-              font-size:1.15rem; text-transform:uppercase; }
   .appname { color:var(--black); font-weight:300; font-size:1.15rem; }
   .appname b { font-weight:700; }
   main { flex:1; max-width:760px; width:100%; margin:0 auto; padding:2rem 1rem; }
@@ -57,7 +55,6 @@ $b = htmlspecialchars($base);
 <body>
 <div class="topstrip"><a href="https://www.lewisu.edu">Lewis University</a> &nbsp;·&nbsp; Security Science Lab</div>
 <div class="masthead">
-  <span class="wordmark">Lewis University</span>
   <span class="appname">SSLab <b>drop</b> — API Reference</span>
 </div>
 

@@ -1,7 +1,7 @@
 <?php
 // drop — upload page.
 require __DIR__ . '/lib.php';
-header('X-Frame-Options: DENY');
+header('X-Frame-Options: SAMEORIGIN'); // allow embedding from tools.php on the same domain
 header('X-Content-Type-Options: nosniff');
 $cfg = cfg();
 $trusted = is_trusted();
@@ -23,28 +23,20 @@ $protected = $cfg['protected'];
           --border:#dcdcd7; --ok:#1e7a34; --err:#c22033; }
   * { box-sizing: border-box; }
   body { margin:0; font-family:'Montserrat', system-ui, sans-serif;
-         background:var(--bg); color:var(--text);
+         background:transparent; color:var(--text);
          min-height:100vh; display:flex; flex-direction:column; }
 
-  /* --- header, lewisu.edu style: thin black strip + white bar --- */
-  .topstrip { background:var(--black); color:var(--white);
-              font-size:.72rem; letter-spacing:.08em; text-transform:uppercase;
-              padding:.45rem 1.2rem; }
-  .topstrip a { color:var(--white); text-decoration:none; }
-  .masthead { background:var(--white); border-bottom:4px solid var(--red);
-              padding:1rem 1.2rem; display:flex; align-items:baseline; gap:.75rem; flex-wrap:wrap; }
-  .wordmark { color:var(--red); font-weight:800; letter-spacing:.06em;
-              font-size:1.15rem; text-transform:uppercase; }
+  /* --- slim title bar (page is embedded in datapot_www, which provides
+         the full site header/footer) --- */
+  .masthead { padding:0 1.2rem .3rem; display:flex; align-items:baseline; gap:.75rem; flex-wrap:wrap; }
   .appname  { color:var(--black); font-weight:300; font-size:1.15rem; }
   .appname b { font-weight:700; }
 
   main { flex:1; display:flex; align-items:flex-start; justify-content:center;
-         padding:2rem 1rem; }
+         padding:.5rem 1rem 1rem; }
   .col { width:100%; max-width:500px; }
 
-  .card { background:var(--white); border:1px solid var(--border);
-          padding:1.8rem; box-shadow:0 2px 10px rgba(0,0,0,.05); }
-  h1 { margin:0 0 .3rem; font-size:1.35rem; font-weight:700; }
+  .card { padding:0 1.8rem 1.8rem; }
   .sub { color:var(--muted); margin:0 0 1.4rem; font-size:.88rem; }
 
   label { display:block; font-size:.8rem; font-weight:600; margin:.9rem 0 .35rem;
@@ -91,6 +83,11 @@ $protected = $cfg['protected'];
   /* --- live service stats --- */
   .stats { text-align:center; color:var(--muted); font-size:.76rem; margin-top:.8rem; }
 
+  /* --- github link --- */
+  .ghline { text-align:right; margin-top:1rem; font-size:.76rem; }
+  .ghline a { color:var(--muted); text-decoration:none; }
+  .ghline a:hover { color:var(--red); text-decoration:underline; }
+
   /* --- disclaimer --- */
   .notice { margin-top:1.2rem; background:var(--white);
             border:1px solid var(--border); border-left:4px solid var(--red);
@@ -99,27 +96,16 @@ $protected = $cfg['protected'];
                letter-spacing:.06em; color:var(--red); }
   .notice p { margin:.4rem 0; }
 
-  /* --- footer, lewisu.edu style: black --- */
-  footer { background:var(--black); color:var(--white); padding:1.4rem 1.2rem;
-           font-size:.78rem; line-height:1.6; }
-  footer a { color:var(--white); }
-  footer .fmuted { color:#bab9af; }
-  .credit { display:flex; align-items:center; gap:.45rem; margin-top:.9rem;
-            color:#bab9af; font-size:.74rem; }
-  .credit svg { flex-shrink:0; }
 </style>
 </head>
 <body>
 
-<div class="topstrip"><a href="https://www.lewisu.edu">Lewis University</a> &nbsp;·&nbsp; Security Science Lab</div>
 <div class="masthead">
-  <span class="wordmark">Lewis University</span>
-  <span class="appname">SSLab <b>drop</b> — file sharing</span>
+  <span class="appname"><b>drop</b> — file sharing</span>
 </div>
 
 <main><div class="col">
   <div class="card">
-    <h1>Share a file</h1>
     <p class="sub">Upload up to 300&nbsp;MB and get a short download link.
       Link generation on our small server takes a few seconds for small files,
       about 1–2 minutes for files over 100&nbsp;MB. Daily limit: 1&nbsp;GB per
@@ -136,7 +122,7 @@ $protected = $cfg['protected'];
       <select id="expiration" name="expiration">
         <?php foreach ($cfg['expirations'] as $key => [$label, $_]): ?>
         <option value="<?= htmlspecialchars($key) ?>"><?= htmlspecialchars($label) ?><?=
-          in_array($key, $protected, true) && !$trusted ? ' (password)' : '' ?></option>
+          in_array($key, $protected, true) && !$trusted ? ' (Internal only. PIN required)' : '' ?></option>
         <?php endforeach; ?>
       </select>
 
@@ -173,29 +159,10 @@ $protected = $cfg['protected'];
        <strong>as-is, with no legal liability</strong>. Operated by SSLab,
        a non-profit lab at Lewis University.</p>
   </div>
-</div></main>
 
-<footer>
-  <div><strong>Copyright - Dr. Jake Cho, SSLab@Lewis University</strong></div>
-  <div class="fmuted"><a href="mailto:sslab@lewisu.edu">sslab@lewisu.edu</a> ·
-    <a href="apidoc.php">API Reference</a></div>
-  <div class="credit">
-    <!-- Claude mark -->
-    <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
-      <g stroke="#D97757" stroke-width="2.4" stroke-linecap="round">
-        <line x1="12" y1="2.5" x2="12" y2="7" />
-        <line x1="12" y1="2.5" x2="12" y2="7" transform="rotate(45 12 12)" />
-        <line x1="12" y1="2.5" x2="12" y2="7" transform="rotate(90 12 12)" />
-        <line x1="12" y1="2.5" x2="12" y2="7" transform="rotate(135 12 12)" />
-        <line x1="12" y1="2.5" x2="12" y2="7" transform="rotate(180 12 12)" />
-        <line x1="12" y1="2.5" x2="12" y2="7" transform="rotate(225 12 12)" />
-        <line x1="12" y1="2.5" x2="12" y2="7" transform="rotate(270 12 12)" />
-        <line x1="12" y1="2.5" x2="12" y2="7" transform="rotate(315 12 12)" />
-      </g>
-    </svg>
-    <span>Designed by SSLab, Coded by Fable 5</span>
-  </div>
-</footer>
+  <div class="ghline"><a href="<?= htmlspecialchars(rtrim(dirname($_SERVER['SCRIPT_NAME']), '/')) ?>/apidoc.php" target="_blank" rel="noopener">API Reference</a> ·
+    <a href="https://github.com/sslab-repo/drop" target="_blank" rel="noopener">https://github.com/sslab-repo/drop</a></div>
+</div></main>
 
 <script>
 const MAX = <?= (int)$cfg['max_bytes'] ?>;
@@ -353,6 +320,16 @@ $('again').addEventListener('click', () => {
   hideError();
   $('form').classList.remove('hidden');
 });
+</script>
+
+<script>
+// Report our height to an embedding parent (e.g. tools.php), so it can
+// size the iframe to fit without a nested scrollbar. No-op standalone.
+if (window.self !== window.top) {
+  const reportHeight = () => parent.postMessage({ height: document.documentElement.scrollHeight }, '*');
+  new ResizeObserver(reportHeight).observe(document.body);
+  window.addEventListener('load', reportHeight);
+}
 </script>
 </body>
 </html>
