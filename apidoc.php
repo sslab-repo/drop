@@ -57,7 +57,6 @@ $b = htmlspecialchars($base);
 <body>
 <div class="topstrip"><a href="https://www.lewisu.edu">Lewis University</a> &nbsp;·&nbsp; Security Science Lab</div>
 <div class="masthead">
-  <span class="wordmark">Lewis University</span>
   <span class="appname">SSLab <b>drop</b> — API Reference</span>
 </div>
 
