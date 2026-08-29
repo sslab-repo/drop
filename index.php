@@ -1,10 +1,9 @@
 <?php
 // drop — upload page.
 require __DIR__ . '/lib.php';
-// Allow embedding only by ourselves and the datapot.org main site's tools
-// page (a different origin: this app is served from app.datapot.org).
-// frame-ancestors supersedes X-Frame-Options, which has no cross-origin allow form.
-header("Content-Security-Policy: frame-ancestors 'self' https://datapot.org https://www.datapot.org https://datapot.net https://www.datapot.net");
+// Allow same-origin embedding only: the datapot.org / datapot.net main site
+// frames this app from its own domain (we live at <domain>/drop).
+header("Content-Security-Policy: frame-ancestors 'self'");
 header('X-Content-Type-Options: nosniff');
 $cfg = cfg();
 $trusted = is_trusted();
