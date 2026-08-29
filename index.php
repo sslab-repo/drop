@@ -1,7 +1,10 @@
 <?php
 // drop — upload page.
 require __DIR__ . '/lib.php';
-header('X-Frame-Options: DENY');
+// Allow embedding only by ourselves and the datapot.org main site's tools
+// page (a different origin: this app is served from app.datapot.org).
+// frame-ancestors supersedes X-Frame-Options, which has no cross-origin allow form.
+header("Content-Security-Policy: frame-ancestors 'self' https://datapot.org https://www.datapot.org https://datapot.net https://www.datapot.net");
 header('X-Content-Type-Options: nosniff');
 $cfg = cfg();
 $trusted = is_trusted();
@@ -352,6 +355,16 @@ $('again').addEventListener('click', () => {
   hideError();
   $('form').classList.remove('hidden');
 });
+</script>
+
+<script>
+// Report our height to an embedding parent (e.g. datapot.org's tools page), so
+// it can size the iframe to fit without a nested scrollbar. No-op standalone.
+if (window.self !== window.top) {
+  const reportHeight = () => parent.postMessage({ height: document.documentElement.scrollHeight }, '*');
+  new ResizeObserver(reportHeight).observe(document.body);
+  window.addEventListener('load', reportHeight);
+}
 </script>
 </body>
 </html>
