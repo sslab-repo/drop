@@ -1,27 +1,11 @@
-# drop — Apache config for shared hosting
-
-# A request for the bare directory (/drop/) serves the upload page.
-DirectoryIndex index.php
-
-# Short links: /drop/Ab3xK9 → f.php?c=Ab3xK9  (legacy /drop/f/Ab3xK9 still works)
-RewriteEngine On
-# Explicit base so per-dir rewrites map back to the public URL even when
-# this folder is reached via a symlink/alias (without it, Apache's
-# docroot-strip heuristic fails there and directory/shortlink rewrites 500).
-RewriteBase /drop
-
-# Serve the upload page for the bare directory request (/drop/) via
-# rewrite, not DirectoryIndex — mod_dir's index subrequest 500s on this
-# host while a direct hit on index.php works fine.
-RewriteRule ^$ index.php [L]
-
-# PHP-FPM/CGI strips the Authorization header — pass it through for Bearer auth
-RewriteCond %{HTTP:Authorization} .
-RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
-RewriteRule ^f/([A-Za-z0-9]+)$ f.php?c=$1 [L,QSA]
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^([A-Za-z0-9]{4,16})$ f.php?c=$1 [L,QSA]
+# drop — Apache config for shared hosting.
+#
+# NOTE (datapot.org's 20i host): any RewriteRule in THIS file makes the
+# server return 500 for the rewritten requests, while identical rules at
+# the docroot work. All drop rewrites (short links /drop/CODE and /drop/f/CODE,
+# plus the FPM Authorization passthrough) therefore live in the DOCROOT
+# .htaccess — see server/public_html.htaccess in the datapot_www repo.
+# Directory-index handling (/drop/ -> index.php) also comes from the docroot.
 
 # Never serve these directly
 <FilesMatch "^(config\.php|lib\.php|apikey\.php|\.user\.ini)$">
