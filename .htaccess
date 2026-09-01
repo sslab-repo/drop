@@ -6,6 +6,11 @@ DirectoryIndex index.php
 # Short links: /drop/Ab3xK9 → f.php?c=Ab3xK9  (legacy /drop/f/Ab3xK9 still works)
 RewriteEngine On
 
+# Serve the upload page for the bare directory request (/drop/) via
+# rewrite, not DirectoryIndex — mod_dir's index subrequest 500s on this
+# host while a direct hit on index.php works fine.
+RewriteRule ^$ index.php [L]
+
 # PHP-FPM/CGI strips the Authorization header — pass it through for Bearer auth
 RewriteCond %{HTTP:Authorization} .
 RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
