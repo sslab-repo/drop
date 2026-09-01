@@ -5,6 +5,10 @@ DirectoryIndex index.php
 
 # Short links: /drop/Ab3xK9 → f.php?c=Ab3xK9  (legacy /drop/f/Ab3xK9 still works)
 RewriteEngine On
+# Explicit base so per-dir rewrites map back to the public URL even when
+# this folder is reached via a symlink/alias (without it, Apache's
+# docroot-strip heuristic fails there and directory/shortlink rewrites 500).
+RewriteBase /drop
 
 # Serve the upload page for the bare directory request (/drop/) via
 # rewrite, not DirectoryIndex — mod_dir's index subrequest 500s on this
