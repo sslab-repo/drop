@@ -1,5 +1,8 @@
 # drop — Apache config for shared hosting
 
+# A request for the bare directory (/drop/) serves the upload page.
+DirectoryIndex index.php
+
 # Short links: /drop/Ab3xK9 → f.php?c=Ab3xK9  (legacy /drop/f/Ab3xK9 still works)
 RewriteEngine On
 
